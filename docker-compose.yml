@@ -1,0 +1,30 @@
+version: '3.8'
+services:
+  postgres-crypto:
+    image: postgres:15
+    container_name: crypto-postgres
+    environment:
+      POSTGRES_DB: crypto_db
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_crypto_data:/var/lib/postgresql/data
+
+  crypto-app:
+    build: .
+    container_name: crypto-tracker-api
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres-crypto
+    restart: always
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-crypto:5432/crypto_db
+      SPRING_DATASOURCE_USERNAME: admin
+      SPRING_DATASOURCE_PASSWORD: password123
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+
+volumes:
+  postgres_crypto_data:

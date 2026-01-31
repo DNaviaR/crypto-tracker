@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Crypto Tracker Live</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { background-color: #1e1e2e; color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        h1 { margin-bottom: 10px; }
+        .price-display { font-size: 2.5em; font-weight: bold; color: #2ecc71; margin-bottom: 20px; }
+        .chart-container { width: 80%; max-width: 800px; background: #2b2b40; padding: 20px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+    </style>
+</head>
+<body>
+
+    <h1>💎 Bitcoin Tracker</h1>
+    <div id="currentPrice" class="price-display">Cargando...</div>
+
+    <div class="chart-container">
+        <canvas id="bitcoinChart"></canvas>
+    </div>
+
+    <script>
+        const ctx = document.getElementById('bitcoinChart').getContext('2d');
+        let myChart;
+
+        async function cargarDatos() {
+            try {
+                // 1. Pedir datos al backend
+                const response = await fetch('http://localhost:8080/historial');
+                const data = await response.json();
+
+                // 2. Si no hay datos, no hacemos nada
+                if (data.length === 0) return;
+
+                // 3. Actualizar el precio grande (el último de la lista)
+                const ultimo = data[data.length - 1];
+                document.getElementById('currentPrice').innerText = `$${ultimo.price.toLocaleString()}`;
+
+                // 4. Preparar datos para el gráfico
+                // Queremos mostrar solo los últimos 20 puntos para que no se sature
+                const datosRecientes = data.slice(-20); 
+
+                const etiquetas = datosRecientes.map(d => {
+                    const fecha = new Date(d.timestamp);
+                    return fecha.toLocaleTimeString(); // Hora:Minuto:Segundo
+                });
+                
+                const precios = datosRecientes.map(d => d.price);
+
+                // 5. Dibujar o Actualizar Gráfico
+                if (myChart) {
+                    // Si ya existe, actualizamos los datos
+                    myChart.data.labels = etiquetas;
+                    myChart.data.datasets[0].data = precios;
+                    myChart.update();
+                } else {
+                    // Si es la primera vez, lo creamos
+                    crearGrafico(etiquetas, precios);
+                }
+
+            } catch (error) {
+                console.error("Error cargando datos:", error);
+            }
+        }
+
+        function crearGrafico(labels, data) {
+            myChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Precio BTC (USD)',
+                        data: data,
+                        borderColor: '#2ecc71',
+                        backgroundColor: 'rgba(46, 204, 113, 0.2)',
+                        borderWidth: 2,
+                        tension: 0.4, // Curvatura de la línea
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        x: { ticks: { color: '#aab6c2' } },
+                        y: { ticks: { color: '#aab6c2' } }
+                    },
+                    plugins: { legend: { labels: { color: 'white' } } }
+                }
+            });
+        }
+
+        // Cargar al inicio y luego refrescar cada 10 segundos
+        cargarDatos();
+        setInterval(cargarDatos, 10000); 
+
+    </script>
+</body>
+</html>
