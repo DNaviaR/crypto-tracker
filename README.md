@@ -27,7 +27,7 @@ Una aplicación Full Stack que monitoriza el precio de Bitcoin en tiempo real co
 
 1.  **Clonar repositorio:**
     ```bash
-    git clone [https://github.com/TU_USUARIO/crypto-tracker.git](https://github.com/TU_USUARIO/crypto-tracker.git)
+    git clone [https://github.com/DNaviaR/crypto-tracker](https://github.com/DNaviaR/crypto-tracker)
     cd crypto-tracker
     ```
 
